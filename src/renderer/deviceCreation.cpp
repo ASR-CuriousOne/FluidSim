@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <set>
+#include <iostream>
 #include <vulkan/vulkan_core.h>
 
 namespace Renderer {
@@ -14,6 +15,7 @@ namespace Renderer {
         VkPhysicalDeviceFeatures deviceFeatures;
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
         vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
 
         QueueFamilyIndices indices = findQueueFamilies(device,surface);
 
@@ -28,7 +30,11 @@ namespace Renderer {
         VkPhysicalDeviceFeatures supportedFeatures;
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-        return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && indices.isComplete() && swapChainAdequate && supportedFeatures.samplerAnisotropy ;
+        bool result = deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && indices.isComplete() && swapChainAdequate && supportedFeatures.samplerAnisotropy;
+
+        if(result) std::cout << deviceProperties.deviceName << std::endl;
+
+        return result ;
     }
 
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface){
@@ -95,6 +101,8 @@ namespace Renderer {
 				break;
 			}
 		}
+
+
 
 		if(m_physicalDevice == VK_NULL_HANDLE) throw std::runtime_error("failed to find suitable GPU!");
 	}

@@ -42,6 +42,22 @@ workspace "FluidSimulation"
             }
             defines { "PLATFORM_LINUX" }
 
+        filter "system:windows"
+            links {
+                "vulkan-1", -- vulkan-1.lib
+                "glfw3" -- glfw3.lib
+            }
+            defines { "PLATFORM_WINDOWS" }
+            -- Vulkan SDK include and library paths (using VULKAN_SDK environment variable)
+            includedirs {
+                "C:/VulkanSDK/1.4.304.0/Include",
+                "C:/glfw/glfw-3.4.bin.WIN64/include"
+            }
+            libdirs {
+                "C:/VulkanSDK/1.4.304.0/Lib",
+                "C:/glfw/glfw-3.4.bin.WIN64/lib-vc2022"
+            }
+
         -- Configuration-specific settings
         filter "configurations:Debug"
             defines { "DEBUG" }
