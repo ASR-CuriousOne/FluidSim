@@ -1,0 +1,7 @@
+bin
+bin-int
+compile_commands 
+FluidSim.make
+compile_commands.json
+Makefile
+.chache

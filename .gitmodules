@@ -1,0 +1,3 @@
+[submodule "vendor/export-compile-commands"]
+	path = vendor/export-compile-commands
+	url = git@github.com:tarruda/premake-export-compile-commands.git
