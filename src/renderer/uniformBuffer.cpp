@@ -1,7 +1,9 @@
 #include "renderer/renderer.hpp"
 #include "renderer/uniformBufferObject.hpp"
 #include "renderer/bufferUtils.hpp"
+#include <cstdint>
 #include <cstring>
+#include <glm/ext/matrix_transform.hpp>
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/gtc/matrix_transform.hpp>
@@ -9,6 +11,8 @@
 #include <stdexcept>
 namespace Renderer {
 	void VulkanRender::createDescriptorSetLayout(){
+		
+
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
         uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -45,18 +49,20 @@ namespace Renderer {
 	void VulkanRender::createUniformBuffers(){
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
-        m_uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-        m_uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-        m_uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+		pushConstants.resize(MAX_FRAMES_IN_FLIGHT);
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            createBuffer(m_device,m_physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers[i], m_uniformBuffersMemory[i]);
+        m_uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT * NUM_OF_OBJECTS);
+        m_uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT * NUM_OF_OBJECTS);
+        m_uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT * NUM_OF_OBJECTS);
+
+        for (size_t i = 0; i < m_uniformBuffers.size(); i++) {
+            createBuffer(m_device,m_physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers[i], m_uniformBuffersMemory[i] );
 
             vkMapMemory(m_device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]);
         }
     }
 
-	void VulkanRender::updateUniformBuffer(uint32_t currentImage) {
+	void VulkanRender::updateUniformBuffer(uint32_t currentImage, uint32_t currentObject) {
         static auto startTime = std::chrono::high_resolution_clock::now();
 
         auto currentTime = std::chrono::high_resolution_clock::now();
@@ -64,29 +70,38 @@ namespace Renderer {
 
         UniformBufferObject ubo{};
         
-        glm::vec3 camPos = {
-            radius * cos(glm::radians(azimuth + time * 10.0f)) * sin(glm::radians(altitude)),
-            radius * sin(glm::radians(azimuth +  time * 10.0f)) * sin(glm::radians(altitude)),
+        camera.position = {
+            radius * cos(glm::radians(azimuth )) * sin(glm::radians(altitude)),
+            radius * sin(glm::radians(azimuth )) * sin(glm::radians(altitude)),
             radius * cos(glm::radians(altitude))
         }; 
 
-        ubo.model = glm::rotate(glm::mat4(1.0f),glm::radians(20.0f) * time,glm::vec3(0.0,0.0,1.0f));
-        ubo.view = glm::lookAt(camPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.proj = glm::perspective(glm::radians(40.0f), m_swapChainExtent.width / (float)m_swapChainExtent.height, 0.1f, 100.0f);
-        
-        ubo.proj[1][1] *= -1;
+		glm::vec4 LightPosAndPower = {
+			100.0f * cos(time * glm::radians(-6.0f)) * sin(glm::radians(90.0f)),
+            100.0f * sin(time * glm::radians(-6.0f)) * sin(glm::radians(90.0f)),
+            100.0f * cos(glm::radians(90.0f)), 1000.0f	
+		};
 
-        memcpy(m_uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+        ubo.model = glm::rotate(glm::translate(glm::mat4(1.0f), m_allObjects[currentObject].getPosition()),glm::radians(20.0f) * time,glm::vec3(0.0,0.0,1.0f));
+        pushConstants[currentImage].view = glm::lookAt(camera.position, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)); 
+		pushConstants[currentImage].proj = glm::perspective(glm::radians(camera.FOV), m_swapChainExtent.width / (float)m_swapChainExtent.height, 0.1f, 100.0f);
+        pushConstants[currentImage].LightDirAndPower = LightPosAndPower;
+		pushConstants[currentImage].LightColor = {0.9,1.0,0.9};
+        pushConstants[currentImage].proj[1][1] *= -1;
+
+        memcpy(m_uniformBuffersMapped[currentImage * NUM_OF_OBJECTS + currentObject], &ubo, sizeof(ubo));
+
+		
     }
     
     void VulkanRender::createDescriptorPool(){
         std::array<VkDescriptorPoolSize, 3> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * NUM_OF_OBJECTS);
 		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * NUM_OF_OBJECTS);
         poolSizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * NUM_OF_OBJECTS);
 
         
 
@@ -94,7 +109,7 @@ namespace Renderer {
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * NUM_OF_OBJECTS);
 
         if (vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor pool!");
@@ -104,18 +119,18 @@ namespace Renderer {
 
     void VulkanRender::createDescriptorSets() {
 
-        std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, m_descriptorSetLayout);
+        std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT * NUM_OF_OBJECTS, m_descriptorSetLayout);
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = m_descriptorPool;
-        allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * NUM_OF_OBJECTS);
         allocInfo.pSetLayouts = layouts.data();
 
-        m_descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+        m_descriptorSets.resize(MAX_FRAMES_IN_FLIGHT * NUM_OF_OBJECTS);
         if (vkAllocateDescriptorSets(m_device, &allocInfo, m_descriptorSets.data()) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }        
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT * NUM_OF_OBJECTS; i++) {
             VkDescriptorBufferInfo bufferInfo{};
             bufferInfo.buffer = m_uniformBuffers[i];
             bufferInfo.offset = 0;
@@ -124,7 +139,7 @@ namespace Renderer {
 			VkDescriptorImageInfo albedoMapImageInfo{};
 			VkDescriptorImageInfo normalMapImageInfo{};
 
-			m_allObjects[0].generateImageInfos(albedoMapImageInfo,normalMapImageInfo);
+			m_allObjects[i % NUM_OF_OBJECTS].generateImageInfos(albedoMapImageInfo,normalMapImageInfo);
 
             std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
 

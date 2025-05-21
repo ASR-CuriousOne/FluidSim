@@ -1,3 +1,5 @@
+#ifndef MESH_HPP
+#define MESH_HPP
 #include <cstdint>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
@@ -28,6 +30,13 @@ namespace Renderer {
 	
 		public:
 
+		
+
+		void setPosition(const glm::vec3& pos) {Position = pos;}
+		glm::vec3 getPosition(){return Position;}
+		void setRotation(const glm::vec4& rot) {Rotation = rot;}
+		glm::vec4 getRotation(){return Rotation;}
+
 		VkBuffer getVertexBuffer() const {return m_vertexBuffer;}
 		VkBuffer getIndexBuffer() const {return m_indexBuffer;}
 		std::vector<uint32_t> getIndices() const {return m_indices;}
@@ -52,3 +61,5 @@ namespace Renderer {
 
 	};
 }
+
+#endif

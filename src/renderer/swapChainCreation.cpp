@@ -3,7 +3,6 @@
 #include "renderer/renderer.hpp"
 #include <GLFW/glfw3.h>
 #include <algorithm>
-#include <iostream>
 #include <limits>
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>

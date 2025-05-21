@@ -20,6 +20,11 @@ namespace Renderer {
 			
 		}
 
+		
+
+		m_allObjects[0].setPosition({0.0,1.0,0.0});
+		m_allObjects[1].setPosition({0.0,-1.0,0.0});
+
 		ObjectMeshPaths.close();
 
 		

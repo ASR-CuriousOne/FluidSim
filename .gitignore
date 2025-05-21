@@ -4,7 +4,7 @@ compile_commands
 FluidSim.make
 compile_commands.json
 Makefile
-.chache
+.cache
 *.vcxproj.*
 *.vcxproj
 *.sln

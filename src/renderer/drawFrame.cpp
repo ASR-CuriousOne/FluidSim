@@ -18,7 +18,7 @@ namespace Renderer{
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
-        updateUniformBuffer(currentFrame);
+        
 
         vkResetCommandBuffer(m_commandBuffers[currentFrame], 0);
         recordCommandBuffer(m_commandBuffers[currentFrame], imageIndex);

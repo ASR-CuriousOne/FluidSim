@@ -31,18 +31,8 @@ namespace Renderer {
         renderPassInfo.pClearValues = clearValues.data();
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);		
 
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
-
-		VkBuffer vertexBuffers[] = {m_allObjects[0].getVertexBuffer()};
-		VkDeviceSize offset[] = {0};
-		VkBuffer indexBuffer = m_allObjects[0].getIndexBuffer();
-
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offset);
-		vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSets[currentFrame], 0, nullptr);
-
-        VkViewport viewport{};
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
+		VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
         viewport.width = (float) m_swapChainExtent.width;
@@ -56,9 +46,30 @@ namespace Renderer {
         scissor.extent = m_swapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        vkCmdDrawIndexed(commandBuffer, m_allObjects[0].getNumOfIndices(), 1, 0, 0, 0);
+		for (int i = 0; i < NUM_OF_OBJECTS;i++) {
+
+			updateUniformBuffer(currentFrame,i);
+			
+
+			VkBuffer vertexBuffers[] = {m_allObjects[i].getVertexBuffer()};
+			VkDeviceSize offset[] = {0};
+			VkBuffer indexBuffer = m_allObjects[i].getIndexBuffer();
+
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offset);
+			vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSets[currentFrame * NUM_OF_OBJECTS + i], 0, nullptr);        	
+
+			vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &pushConstants[currentFrame]);
+
+
+        	vkCmdDrawIndexed(commandBuffer, m_allObjects[i].getNumOfIndices(), 1, 0, 0, 0);	
+		}
+		
+
 
         vkCmdEndRenderPass(commandBuffer);
+		
 
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to record command buffer!");

@@ -9,12 +9,11 @@ layout(location = 2) in vec3 fragNormal;
 layout(location = 3) in vec3 fragPos;
 layout(location = 4) in vec3 fragTangent;
 layout(location = 5) in vec3 fragBiTangent;
+layout(location = 6) in vec4 LightPosAndPower;
+layout(location = 7) in vec3 LightColor;
 
 layout(location = 0) out vec4 outColor;
 
-const vec3 lightPos = vec3(300,0,0);
-const vec3 lightColor = vec3(1.0, 0.9, 0.9);
-const float lightPower = 100000;
 const float factor = 1;
 
 const vec3 specColor = vec3(0.1, 0.1, 0.1);
@@ -29,7 +28,7 @@ void main() {
 
     vec3 normal = (normalMap.r * fragTangent  + normalMap.g * fragBiTangent) * factor + normalMap.b * fragNormal;
     normal = normalize(normal);
-    vec3 lightDir = lightPos - fragPos;
+    vec3 lightDir = LightPosAndPower.xyz - fragPos;
     float distance = dot(lightDir,lightDir);
     lightDir = normalize(lightDir);
     float lambertian = max(dot(lightDir, normal), 0.0);
@@ -48,8 +47,8 @@ void main() {
     }
     vec3 colorLinear = 
         ambientColor + 
-        diffuseColor * lambertian * lightColor * lightPower / distance +
-        specColor * specular * lightColor * lightPower / distance ;
+        diffuseColor * lambertian * LightColor * LightPosAndPower.w / distance +
+        specColor * specular * LightColor * LightPosAndPower.w / distance ;
     // apply gamma correction (assume ambientColor, diffuseColor and specColor
     // have been linearized, i.e. have no gamma correction in them)
     vec3 colorGammaCorrected = pow(colorLinear, vec3(1.0 / screenGamma));

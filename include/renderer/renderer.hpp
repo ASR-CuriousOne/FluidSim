@@ -8,6 +8,8 @@
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
 #include <renderer/mesh.hpp>
+#include <renderer/camera.hpp>
+#include <renderer/pushConstantStruct.hpp>
 
 
 
@@ -62,6 +64,8 @@ namespace Renderer{
         VkDescriptorPool m_descriptorPool;
         std::vector<VkDescriptorSet> m_descriptorSets;
 
+		std::vector<MeshPushConstants> pushConstants;
+
 		float azimuth = 0 , altitude = 60.0f , radius = 4.0f;
 
         VkCommandPool m_commandPool;
@@ -84,6 +88,8 @@ namespace Renderer{
 		std::vector<VkSemaphore> renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences;
 
+		
+		Camera camera;
 
 		
 	public:
@@ -128,7 +134,7 @@ namespace Renderer{
 		void createUniformBuffers();
 		void createDescriptorPool();
 		void createDescriptorSets();
-		void updateUniformBuffer(uint32_t currentFrame);
+		void updateUniformBuffer(uint32_t currentFrame, uint32_t currentObject);
 
 		void drawFrame();
 
