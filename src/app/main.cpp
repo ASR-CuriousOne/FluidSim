@@ -5,9 +5,10 @@ void Update(){
 }
 
 int main(){
-	Core::Application app;	
 
 	Renderer::VulkanRender vkRenderer;
+
+	Core::FluidSim(vkRenderer.getVulkanContext());
 	
 	vkRenderer.StartLoop(Update);
 	

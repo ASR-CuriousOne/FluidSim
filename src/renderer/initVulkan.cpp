@@ -81,4 +81,15 @@ namespace Renderer{
         }
 
 	}
+
+	VulkanContext VulkanRender::getVulkanContext(){
+		VulkanContext context{};
+		context.m_vkInstance = m_vkInstance;
+		context.m_physicalDevice = m_physicalDevice;
+		context.m_device = m_device;
+		context.m_surface = m_surface;
+		context.m_window = m_window;
+
+		return context;
+	}
 }

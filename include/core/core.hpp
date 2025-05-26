@@ -1,18 +1,30 @@
 #ifndef CORE_HPP
 #define CORE_HPP
-#include <iostream>
+#include "renderer/vulkanContext.hpp"
+#include <GLFW/glfw3.h>
+#include <vector>
+#include <vulkan/vulkan_core.h>
 
 namespace Core {
 	
-	class Application{
-	public:
+	class FluidSim{
+		VkInstance m_instance;
+		VkPhysicalDevice m_physicalDevice;
+		VkDevice m_device;
+		VkSurfaceKHR m_surface;
+		GLFWwindow* m_window;
 
-		Application(){
-			
-			std::cout << "Hello World From Core" << std::endl;
-			
-		
-		}	
+		const int MAX_FRAMES_IN_FLIGHT = 2;
+
+		std::vector<VkBuffer> shaderStorageBuffers;
+		std::vector<VkDeviceMemory> shaderStorageBuffersMemory;
+
+public:
+		FluidSim(Renderer::VulkanContext Context);
+
+		void createComputePipeline();
+
+		void createShaderStorageBuffers();
 	};
 }
 

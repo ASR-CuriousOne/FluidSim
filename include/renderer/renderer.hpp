@@ -7,9 +7,10 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
-#include <renderer/mesh.hpp>
-#include <renderer/camera.hpp>
-#include <renderer/pushConstantStruct.hpp>
+#include "renderer/mesh.hpp"
+#include "renderer/camera.hpp"
+#include "renderer/pushConstantStruct.hpp"
+#include "renderer/vulkanContext.hpp"
 
 
 
@@ -111,6 +112,8 @@ namespace Renderer{
 		void createSwapChain();
 		void reCreateSwapChain();
 		void cleanUpSwapChain(); 
+
+		VulkanContext getVulkanContext();
 
 		void createImageViews();
 
