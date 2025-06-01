@@ -1,3 +1,7 @@
 [submodule "vendor/export-compile-commands"]
 	path = vendor/export-compile-commands
 	url = git@github.com:tarruda/premake-export-compile-commands.git
+[submodule "Triton"]
+	path = Triton
+	url = git@github.com:ASR-CuriousOne/Triton.git
+	branch = Lib
